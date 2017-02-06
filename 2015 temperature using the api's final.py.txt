@@ -1,0 +1,38 @@
+"""
+This program will connect to forecast.io API and get the temperatures of all
+the crime incidents of 2015
+
+Note: Give the program a good 1 hour 50 minutes to run. Because connections to
+the api can take some time
+
+"""
+import pandas as pd
+#forecastio library is mandatory to run the code
+import forecastio
+#df contains the entire data of police incidents
+df=pd.read_csv("Police_Incidents_2015.csv",squeeze=False)
+df['BeginDate']=df['BeginDate'].str.replace("T"," ").str.replace("Z","")
+length_date=len(df['BeginDate'][0])-4
+df['BeginDate']=df['BeginDate'].str[:length_date]
+parse = lambda x: pd.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+df2=df.copy()
+df2["crime"]=df['BeginDate']
+df2["crime"]=df2["crime"].apply(parse)
+df["crime"]=df2["crime"]
+# create a 'temperature' column and initialize the values to 0 forecast = forecastio.load_forecast(api_key, lat, lng,)
+df["temperature"]=0.0
+#You need an API key to use it (http://developer.forecast.io)
+api_key = "********************"
+api_key=["e4813cfd32e67f9b6660e3433387b814","a2146f43fce6e946856a70e947a325fb","0963fd35a2c17d693e236db5caff0533","5d163a5edebcf4353e59a25aaed30aed","c74ba47074020677308b14172260c000","9f4348105d9b79508164bc0fd41dc356","9661e6cf06595bdff75cb82e8c7c9796","da75e1161226d6a012b932f26b1023ed","9d5bda02622d2a387aa6297c909fc05b","b607a38e337e7b3e59302ad7ac3d3cc3","bc609a2c712af7062b8778103a62d856","031725397bbcf173dc459ab5b8a30115","b830aa3cfe4d6b46040ba4467e2546f8","0f7bb39d9a480aa5a64c3fafe4a61341","26ea6a6f414e377028b47b677c76dbeb","61feac8208dac5461cc9b05fda11499a","e1d160e2f8f947f6e8f3f585a0b69370","32a4ba2cc21bafc6eb60dcc2bcedf5e2","fe11dc3f691c3918a5cbb3eb25df42d4","caf6c99927afe0e80d554034a4ef34f1","d44c8407a67fa75dd14cd2413dc53beb","0bd8dba54f80025310788d8b87f472ab","61b08e923b2da58aa9dbdf91f603834d","14612d0edced2c36772ec696e0c6dede","543c1e021f43bb3872a6c07dcb8d48a5s"]
+#forecast.currently().temperature
+api_connection=0
+for i in range(len(df)):
+    #'Lat' and 'Long' are the columns that contains latitude and longitudes of criminal incidents
+    lat = df["Lat"][i]
+    lng = df["Long"][i]
+    api_key_i=api_key[i/985]
+    #load_forecast method has mandatory parameters as API key, latitude, longitude
+    forecast = forecastio.load_forecast(api_key_i, lat, lng,df["crime"][i])
+    df["temperature"][i]=forecast.currently().temperature
+#Below statement exports the entire data frame of police incidents along with the temperatures
+df.to_csv("Police_Incidents_2015_updatedwithTemp.csv")

@@ -1,0 +1,21 @@
+#This is example code of creating a plot using the 2015 precinct data.
+#Plots for other years would be made the same way, but with different file names
+    #(These were omitted for brevity)
+
+import matplotlib.pyplot as plt
+import geopandas as gpd
+
+#load each layer into a geopanda GeoFrame
+crime = gpd.read_file("Police_Incidents_2015.geojson")
+precinct = gpd.read_file("precincts.geojson")
+stations = gpd.read_file("Police_Stations.geojson")
+
+#plot the precinct background
+ax=precinct.plot()
+#plot the crime data
+ax = crime.plot(ax=ax)
+#finally, plot stations
+stations.plot(ax=ax, marker="x", color="red", mew =10, markersize=20)
+plt.title("Crimes in Minneapolis - 2015")
+plt.show()
+

@@ -1,0 +1,4 @@
+Pre-requisite: run the 2015 temperature using the api's final.py file to get the 'Police_Incidents_2015_updatedwithTemp.csv' 
+
+
+This program takes 'Police_Incidents_2015_updatedwithTemp.csv' as a input and runs the linear regression model 

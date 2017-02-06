@@ -1,0 +1,16 @@
+import statsmodels.formula.api as smf
+#import numpy as np
+import pandas as pd
+incidents=pd.read_csv("Police_Incidents_2015_updatedwithTemp.csv",squeeze=True)
+parse=lambda x:(pd.to_datetime(x, format='%H:%M:%S').hour)
+incidents["crime_happened"]=1
+incidents=incidents.dropna()
+#Time column contains the time of the crime incident
+incidents["hour"]=incidents["Time"].apply(parse)
+#just temperature
+grouped=incidents.groupby(["temperature"],as_index=False).agg({"crime_happened":"sum"})
+model = smf.ols(formula="crime_happened ~ temperature", data=grouped).fit()
+print(model.summary())
+# r^2 11.5%
+
+

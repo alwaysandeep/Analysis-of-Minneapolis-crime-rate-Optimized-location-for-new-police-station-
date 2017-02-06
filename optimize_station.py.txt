@@ -1,0 +1,92 @@
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from shapely.geometry import Point
+import matplotlib.pyplot as plt
+import pandas as pd
+from pandas import DataFrame
+from scipy.cluster.vq import kmeans2
+import numpy as np
+from scipy.optimize import fmin,basinhopping,rosen, differential_evolution
+import math
+import scipy.optimize as optimize
+
+crimes = gpd.read_file("Police_Incidents_2015.geojson")
+precinct = gpd.read_file("precincts.geojson")
+stations = gpd.read_file("Police_Stations.geojson")
+
+# Define a Function to make clusters in the data based on the feature vector and the no. of clusters required.
+def clustering (data,num_clusters):
+    x, y = kmeans2(data, num_clusters , iter = 20)
+    return (x,y)
+
+# Define a function to make a plot of the crime location and the centeroids based on clusters.   
+def plot_clusters(data,centeroids,clusters):
+    plt.scatter(data['Latitude'], data['Longitude'], c=clusters, alpha=0.33333)
+    plt.scatter( centeroids[:,0],centeroids[:,1],c='red',marker= 'x',alpha=1 )
+    plt.show()
+    
+# Read the CSV file into a DataFrame
+crime = pd.read_csv('Police_Incidents_2015.csv')
+pd.set_option('precision',8)
+# Create a dataframe with only the required features for clustering
+crime_location = DataFrame()
+crime_location['Latitude'] = crime['Lat']
+crime_location['Longitude'] = crime['Long']
+# Specify the no. of clusters required
+num_clusters = 13
+
+# Function call to create clusters using Kmeans2
+
+centeroid,cluster =clustering(crime_location,num_clusters)
+# Function to plot the Co-Ordinates on the map as per clusters.
+#plot_clusters(crime_location,centeroid,cluster)
+array2=np.array([[45.00812948,-93.2468554],
+[44.94817514,-93.23445848],
+[44.9913555,-93.30508653],
+[44.94648138,-93.27755368],
+[44.98079656,-93.27215832],
+[44.96877199,-93.24745199],
+[44.96939228,-93.26355705],
+[44.96763002,-93.27942831],
+[44.98815103,-93.25670347],
+[45.01235066,-93.29454588],
+[44.96407055,-93.27764843],
+[44.94912052,-93.29810577]])
+crime_centers_cluster=pd.DataFrame(centeroid,columns=["Latitude","Longitude"])
+police_stations=pd.DataFrame(array2,columns=["Latitude","Longitude"])
+police_stations["distances"]=0
+total_distance=pd.Series(np.zeros(len(centeroid)))
+
+def dist1(x):
+    global police_stationsr
+    global centeroid
+    global total_distance
+    temp=pd.DataFrame([[x[0],x[1],0]],columns=["Latitude","Longitude","distances"],index=[12])
+    police_stations1=police_stations.append(temp)
+    total_distance=pd.Series(np.zeros(len(centeroid)))
+    for i in range(len(centeroid)):
+        police_stations1["distances"]=np.sqrt((police_stations1["Latitude"]-crime_centers_cluster.ix[i]["Latitude"])**2+(police_stations1["Longitude"]-crime_centers_cluster.ix[i]["Longitude"])**2)
+        total_distance[i]=min(police_stations1["distances"])
+    #print police_stations1
+    return sum(total_distance)*1000000
+#bounds contains the boundaries for both latitude and longitude
+bounds=[(44,46),(-95,-92)]     
+ret=differential_evolution(dist1, bounds,tol =.001,maxiter =10**3,mutation=(0.00001,0.00001),polish =True,popsize =1000)  
+print ret
+print "minimum distance {}".format(ret.fun/1000000)
+new_police_station_latitude=ret.x[0]
+new_police_station_longitude=ret.x[1]
+
+crime_centers_cluster["geometry"] = zip(crime_centers_cluster.Longitude, crime_centers_cluster.Latitude)
+crime_centers_cluster["geometry"] = crime_centers_cluster["geometry"].apply(Point)
+
+new_station = gpd.GeoSeries([Point(list(reversed(ret.x)))])
+centroids = gpd.GeoSeries(crime_centers_cluster["geometry"])
+
+ax=precinct.plot()
+ax = crimes.plot(ax=ax)
+ax=stations.plot(ax=ax, marker="x", color="blue", mew =10, markersize=20)
+ax = centroids.plot(ax=ax, marker="x", color="red", mew=10, markersize=20)
+new_station.plot(ax=ax, marker="x", color="green", mew=10, markersize=20)
+plt.title("Crimes in Minneapolis - 2015")
+plt.show()

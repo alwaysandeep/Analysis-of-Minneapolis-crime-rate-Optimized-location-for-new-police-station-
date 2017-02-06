@@ -1,0 +1,21 @@
+#This is example code of creating a plot using the 2015 neighborhood data.
+#Plots for other years would be made the same way, but with different file names
+    #(These were omitted for brevity)
+
+import matplotlib.pyplot as plt
+import geopandas as gpd
+
+#load each layer into a geopanda GeoFrame
+crime = gpd.read_file("Police_Incidents_2015.geojson")
+neighborhood = gpd.read_file("Neighborhoods.geojson")
+stations = gpd.read_file("Police_Stations.geojson")
+
+
+#plot the neighborhood background
+ax=neighborhood.plot()
+#plot the crime data
+ax = crime.plot(ax=ax)
+#finally, plot stations
+stations.plot(ax=ax, marker="x", color="red", mew =5, markersize=20)
+plt.axis("off")
+plt.show()

@@ -1,0 +1,14 @@
+"""
+This program file will plot the number of crimes with temperatures
+#data is only for the 2015, as we are limited to temperatures of 2015
+"""
+import pandas as pd
+from pandas import DataFrame
+import matplotlib.pyplot as plt
+df=pd.read_csv("Police_Incidents_2015_updatedwithTemp.csv",squeeze=False)
+df["temperature"]=df["temperature"].round(0)
+df["No_of_crimes"]=0
+grouped=df.groupby(["temperature"])["No_of_crimes"].count()
+grouped.plot(kind="line",use_index=True,title="temperatures VS number of crimes",label="Number of crimes",color='green')
+plt.grid(True,axis='both')
+plt.show()
